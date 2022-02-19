@@ -1,0 +1,3 @@
+User-agent: *
+Disallow:
+Sitemap: https://ramccall0.github.io/texaswalkabout/sitemap.xml
