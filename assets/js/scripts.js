@@ -1,29 +1,3 @@
-// Sticky menu
-var new_scroll_position = 0;
-var last_scroll_position;
-var header = document.getElementById("js-header");
-
-window.addEventListener('scroll', function (e) {
-	last_scroll_position = window.scrollY;
-
-	// Scrolling down
-	if (new_scroll_position < last_scroll_position && last_scroll_position > 100) {
-		header.classList.remove("is-visible");
-		header.classList.add("is-hidden");
-
-		// Scrolling up
-	} else if (new_scroll_position > last_scroll_position) {
-		header.classList.remove("is-hidden");
-		header.classList.add("is-visible");
-	}
-
-	if (last_scroll_position < 1) {
-		header.classList.remove("is-visible");
-	}
-
-	new_scroll_position = last_scroll_position;
-});
-
 // Dropdown menu
 (function (menuConfig) {
 	/**
@@ -438,35 +412,158 @@ window.addEventListener('scroll', function (e) {
 	init();
 })(window.publiiThemeMenuConfig);
 
+// Back to top 
+var backToTopButton = document.getElementById("backToTop");
+if (backToTopButton) {
+   window.onscroll = function() {backToTopScrollFunction()};
 
-// Load search input area
-var searchButton = document.querySelector('.js-search-btn');
-    searchOverlay = document.querySelector('.js-search-overlay');
-    searchInput = document.querySelector('.js-search-input');
+   function backToTopScrollFunction() {
+   if (document.body.scrollTop > 400 || document.documentElement.scrollTop > 400) {
+      backToTopButton.classList.add("is-visible");
+   } else {
+      backToTopButton.classList.remove("is-visible");
+     }
+   }
 
-if (searchButton) {
-    searchButton.addEventListener('click', function () {        
-        searchOverlay.classList.toggle('expanded');
-       
-        setTimeout(function() {
-            if (searchOverlay.classList.contains('expanded')) {
-                searchInput.focus();
-            }
-        }, 60);        
-    });
-
-    searchOverlay.addEventListener('click', function (e) {
-        e.stopPropagation();
-    });
-
-    searchButton.addEventListener('click', function (e) {
-        e.stopPropagation();
-    });
-
-    document.body.addEventListener('click', function () {
-        searchOverlay.classList.remove('expanded');
-    });
+   function backToTopFunction() {
+     document.body.scrollTop = 0;
+     document.documentElement.scrollTop = 0;
+   };
 }
+
+
+/**
+ * Responsive embeds script
+ */
+ (function () {
+	let wrappers = document.querySelectorAll('.post__video, .post__iframe');
+
+	for (let i = 0; i < wrappers.length; i++) {
+		let embed = wrappers[i].querySelector('iframe, embed, video, object');
+
+		if (!embed) {
+			continue;
+		}
+
+        if (embed.getAttribute('data-responsive') === 'false') {
+            continue;
+        }
+
+		let w = embed.getAttribute('width');
+		let h = embed.getAttribute('height');
+		let ratio = false;
+
+		if (!w || !h) {
+			continue;
+		}
+		
+		if (w.indexOf('%') > -1 && h.indexOf('%') > -1) { // percentage mode
+			w = parseFloat(w.replace('%', ''));
+			h = parseFloat(h.replace('%', ''));
+			ratio = h / w;
+		} else if (w.indexOf('%') === -1 && h.indexOf('%') === -1) { // pixels mode
+			w = parseInt(w, 10);
+			h = parseInt(h, 10);
+			ratio = h / w;
+		}
+
+		if (ratio !== false) {
+			let ratioValue = (ratio * 100) + '%';
+			wrappers[i].setAttribute('style', '--embed-aspect-ratio:' + ratioValue);
+		}
+	}
+})();
+
+
+/**
+ * Layout switcher
+ */
+ (function () {
+	let layoutButtons = document.querySelectorAll('.switchers__item');
+	let contentWrapper = document.querySelector('.l-grid');
+	let articles = contentWrapper.querySelectorAll('.c-card');
+
+	if (!contentWrapper || !layoutButtons.length || !articles.length) {
+		return;
+	}
+
+	let gridBtn = layoutButtons[0];
+	let rowsBtn = layoutButtons[1];
+
+	gridBtn.addEventListener('click', e => {
+		e.preventDefault();
+		let isActive = gridBtn.classList.contains('is-active');
+
+		if (!isActive) {
+			setGridLayout();
+		}
+	});
+
+	rowsBtn.addEventListener('click', e => {
+		e.preventDefault();
+		let isActive = rowsBtn.classList.contains('is-active');
+
+		if (!isActive) {
+			setRowsLayout();
+		}
+	});
+
+	function setGridLayout () {
+		gridBtn.classList.add('is-active');
+		rowsBtn.classList.remove('is-active');
+		contentWrapper.classList.remove('l-grid--1');
+		articles = contentWrapper.querySelectorAll('.c-card');
+
+		for (let i = 0; i < articles.length; i++) {
+			articles[i].classList.remove('c-card--rows');
+		}
+
+		localStorage.setItem('persona-theme-selected-layout', 'grid');	
+		resetIsotopeLayout();
+	}
+
+	function setRowsLayout () {
+		gridBtn.classList.remove('is-active');
+		rowsBtn.classList.add('is-active');
+		contentWrapper.classList.add('l-grid--1');
+		articles = contentWrapper.querySelectorAll('.c-card');
+
+		for (let i = 0; i < articles.length; i++) {
+			articles[i].classList.add('c-card--rows');
+		}
+
+		localStorage.setItem('persona-theme-selected-layout', 'rows');
+		resetIsotopeLayout();
+	}
+
+	function resetIsotopeLayout () {
+		if (window.personaThemeIsotopeInstance) {
+			if (document.querySelector('.filter__item.is-active')) {
+				window.personaThemeIsotopeInstance.arrange({
+					filter: document.querySelector('.filter__item.is-active').getAttribute('data-filter')
+				});
+			} else {
+				window.personaThemeIsotopeInstance.arrange();
+			}
+		}
+	}
+
+	window.addEventListener("DOMContentLoaded", function () {
+		setTimeout(() => {
+			if (localStorage.getItem('persona-theme-selected-layout')) {
+				let savedLayout = localStorage.getItem('persona-theme-selected-layout');
+	
+				if (savedLayout === 'grid') {
+					setGridLayout();
+				}
+	
+				if (savedLayout === 'rows') {
+					setRowsLayout();
+				}
+			}
+		}, 0);
+	}, false);
+})();
 
 
 // Share buttons pop-up
@@ -528,22 +625,3 @@ if (searchButton) {
 		 return !!popup;
 	}
 })();
-
-
-// Reading scroll bar
-if (document.getElementById("js-post__progress")) { 
-	document.addEventListener(
-		 "scroll",
-		 function() {
-			  var scrollTop = document.documentElement["scrollTop"] || document.body["scrollTop"];
-			  var scrollBottom = (document.documentElement["scrollHeight"] || document.body["scrollHeight"]) - document.documentElement.clientHeight;
-			  scrollPercent = scrollTop / scrollBottom * 100 + "%";
-			  document.getElementById("js-post__progress").style.setProperty("--scroll", scrollPercent);
-		 }, {
-			  passive: true
-		 }
-	);
-}
-
-
-
